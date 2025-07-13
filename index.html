@@ -6,92 +6,111 @@
 <title>BekoBook</title>
 <style>
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f5f6fa;
+    font-family: Arial, sans-serif;
+    background: #fff;
     margin: 0; padding: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
   }
   header {
     width: 100%;
-    background: #1877f2;
+    background: #4a90e2;
     color: white;
-    padding: 15px 0;
-    font-size: 28px;
-    font-weight: 700;
+    padding: 15px;
+    font-size: 26px;
+    font-weight: bold;
     text-align: center;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
   .container {
-    background: white;
-    padding: 20px 25px;
-    margin: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgb(24 119 242 / 0.4);
-    width: 360px;
+    width: 380px;
     max-width: 95vw;
+    background: #f9f9f9;
+    margin: 20px 0;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgb(0 0 0 / 0.1);
   }
   input[type=text], input[type=password], textarea {
     width: 100%;
-    padding: 10px;
-    margin: 10px 0 18px;
-    border-radius: 6px;
-    border: 1.8px solid #ddd;
-    box-sizing: border-box;
+    margin: 10px 0;
+    padding: 9px;
     font-size: 16px;
-    resize: vertical;
+    border-radius: 5px;
+    border: 1.5px solid #ccc;
+    box-sizing: border-box;
   }
   textarea {
-    min-height: 60px;
+    resize: vertical;
   }
   button {
     width: 100%;
-    background-color: #1877f2;
-    color: white;
+    background-color: #4a90e2;
     border: none;
-    padding: 12px 0;
-    border-radius: 8px;
-    font-weight: 700;
+    padding: 11px 0;
     font-size: 18px;
+    font-weight: 700;
+    color: white;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
   }
   button:hover {
-    background-color: #155db2;
+    background-color: #357abd;
   }
   .link {
-    color: #1877f2;
-    margin-top: 10px;
-    cursor: pointer;
+    margin-top: 12px;
+    color: #4a90e2;
     text-align: center;
+    cursor: pointer;
     user-select: none;
   }
-  .post, .message {
-    border-bottom: 1px solid #ddd;
-    padding: 10px 5px;
-    margin-bottom: 6px;
-    border-radius: 6px;
-    background: #f1f3f8;
+  .post {
+    background: white;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.05);
   }
   .author {
     font-weight: 700;
-    color: #333;
+    color: #222;
+    margin-bottom: 6px;
   }
   .likes {
-    margin-top: 5px;
+    margin-top: 8px;
+    color: #777;
     cursor: pointer;
     user-select: none;
-    color: #555;
     font-weight: 600;
   }
   .likes.liked {
     color: #e0245e;
   }
   .logout-btn {
-    margin-top: 18px;
+    margin-top: 20px;
     background-color: #e0245e;
+  }
+  #messages {
+    margin-top: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: inset 0 0 5px rgb(0 0 0 / 0.05);
+  }
+  .message {
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 6px;
+  }
+  .message strong {
+    color: #333;
+  }
+  .message small {
+    color: #999;
   }
 </style>
 </head>
@@ -134,7 +153,6 @@
 </div>
 
 <script>
-  // Данные в localStorage
   const usersKey = "bekoUsers";
   const loggedInUserKey = "bekoLoggedInUser";
   const postsKey = "bekoPosts";
@@ -145,7 +163,6 @@
   let posts = JSON.parse(localStorage.getItem(postsKey)) || [];
   let messages = JSON.parse(localStorage.getItem(messagesKey)) || {};
 
-  // Элементы
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const app = document.getElementById("app");
@@ -170,21 +187,18 @@
   const logoutBtn = document.getElementById("logoutBtn");
   const userNameSpan = document.getElementById("userName");
 
-  // Показать форму входа
   function showLoginForm() {
     loginForm.style.display = "block";
     registerForm.style.display = "none";
     app.style.display = "none";
   }
 
-  // Показать форму регистрации
   function showRegisterForm() {
     loginForm.style.display = "none";
     registerForm.style.display = "block";
     app.style.display = "none";
   }
 
-  // Показать главный экран
   function showApp() {
     loginForm.style.display = "none";
     registerForm.style.display = "none";
@@ -194,14 +208,12 @@
     refreshMessages();
   }
 
-  // Проверка авторизации
   if(loggedInUser && users[loggedInUser]) {
     showApp();
   } else {
     showLoginForm();
   }
 
-  // Регистрация
   registerBtn.onclick = () => {
     const login = registerLoginInput.value.trim();
     const pass = registerPasswordInput.value.trim();
@@ -215,13 +227,12 @@
     }
     users[login] = pass;
     localStorage.setItem(usersKey, JSON.stringify(users));
-    alert("Регистрация успешна! Теперь войдите.");
+    alert("Регистрация успешна! Войдите в систему.");
     registerLoginInput.value = "";
     registerPasswordInput.value = "";
     showLoginForm();
   };
 
-  // Вход
   loginBtn.onclick = () => {
     const login = loginInput.value.trim();
     const pass = passwordInput.value.trim();
@@ -236,18 +247,15 @@
     }
   };
 
-  // Ссылки переключения форм
   showRegisterLink.onclick = showRegisterForm;
   showLoginLink.onclick = showLoginForm;
 
-  // Выход
   logoutBtn.onclick = () => {
     loggedInUser = null;
     localStorage.removeItem(loggedInUserKey);
     showLoginForm();
   };
 
-  // Создать пост
   createPostBtn.onclick = () => {
     const text = postInput.value.trim();
     if(!text) {
@@ -266,7 +274,6 @@
     refreshPosts();
   };
 
-  // Обновить посты
   function refreshPosts() {
     postsDiv.innerHTML = "";
     posts.forEach(post => {
@@ -276,7 +283,7 @@
       div.innerHTML = `
         <div class="author">${post.author}</div>
         <div>${post.text}</div>
-        <div class="likes ${liked ? "liked" : ""}" data-id="${post.id}">❤️ ${post.likes} ${liked ? "(Лайкнуто)" : ""}</div>
+        <div class="likes ${liked ? "liked" : ""}" data-id="${post.id}">❤ ${post.likes} ${liked ? "(Лайкнуто)" : ""}</div>
       `;
       postsDiv.appendChild(div);
     });
@@ -288,7 +295,6 @@
     });
   }
 
-  // Лайкнуть пост
   function likePost(id) {
     const post = posts.find(p => p.id === id);
     if(!post) return;
@@ -302,7 +308,6 @@
     refreshPosts();
   }
 
-  // Отправить сообщение
   sendMessageBtn.onclick = () => {
     const recipient = messageRecipient.value.trim();
     const text = messageInput.value.trim();
@@ -325,7 +330,6 @@
     refreshMessages();
   };
 
-  // Обновить сообщения
   function refreshMessages() {
     messagesDiv.innerHTML = "";
     const msgs = messages[loggedInUser] || [];
