@@ -112,6 +112,10 @@
   .message small {
     color: #999;
   }
+  #exportImportSection {
+    margin-top: 20px;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
@@ -150,16 +154,16 @@
   <div id="messages"></div>
 
   <button class="logout-btn" id="logoutBtn">Выйти</button>
+
+  <div id="exportImportSection">
+    <button id="exportBtn">Экспорт базы</button>
+    <input type="file" id="importFile" style="display:none" />
+    <button id="importBtn">Импорт базы</button>
+  </div>
 </div>
 
+<script src="data.js"></script>
 <script>
-  // Юзеры хранятся объектом { login: {password: "", posts: [], messages: [] } }
-  const usersKey = "bekoUsers";
-  const loggedInUserKey = "bekoLoggedInUser";
-
-  let users = JSON.parse(localStorage.getItem(usersKey)) || {};
-  let loggedInUser = localStorage.getItem(loggedInUserKey);
-
   // DOM
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
@@ -183,6 +187,11 @@
   const createPostBtn = document.getElementById("createPostBtn");
   const sendMessageBtn = document.getElementById("sendMessageBtn");
   const logoutBtn = document.getElementById("logoutBtn");
+
+  const exportBtn = document.getElementById("exportBtn");
+  const importBtn = document.getElementById("importBtn");
+  const importFile = document.getElementById("importFile");
+
   const userNameSpan = document.getElementById("userName");
 
   // Показать формы
@@ -220,12 +229,10 @@
       alert("Заполните все поля!");
       return;
     }
-    if (users[login]) {
+    if (!registerUser(login, pass)) {
       alert("Пользователь уже существует!");
       return;
     }
-    users[login] = { password: pass, posts: [], messages: {} };
-    saveUsers();
     alert("Регистрация успешна! Войдите в систему.");
     registerLoginInput.value = "";
     registerPasswordInput.value = "";
@@ -236,9 +243,7 @@
   loginBtn.onclick = () => {
     const login = loginInput.value.trim();
     const pass = passwordInput.value.trim();
-    if (users[login] && users[login].password === pass) {
-      loggedInUser = login;
-      localStorage.setItem(loggedInUserKey, loggedInUser);
+    if (loginUser(login, pass)) {
       loginInput.value = "";
       passwordInput.value = "";
       showApp();
@@ -251,8 +256,7 @@
   showLoginLink.onclick = showLoginForm;
 
   logoutBtn.onclick = () => {
-    loggedInUser = null;
-    localStorage.removeItem(loggedInUserKey);
+    logoutUser();
     showLoginForm();
   };
 
@@ -263,15 +267,7 @@
       alert("Напишите что-нибудь!");
       return;
     }
-    const post = {
-      id: Date.now(),
-      author: loggedInUser,
-      text,
-      likes: 0,
-      likedBy: []
-    };
-    users[loggedInUser].posts.unshift(post);
-    saveUsers();
+    createPost(text);
     postInput.value = "";
     refreshPosts();
   };
@@ -279,7 +275,7 @@
   // Обновить посты
   function refreshPosts() {
     postsDiv.innerHTML = "";
-    const userPosts = users[loggedInUser].posts || [];
+    const userPosts = getUserPosts();
     userPosts.forEach(post => {
       const liked = post.likedBy.includes(loggedInUser);
       const div = document.createElement("div");
@@ -294,24 +290,12 @@
     postsDiv.querySelectorAll(".likes").forEach(el => {
       el.onclick = () => {
         const id = +el.dataset.id;
-        likePost(id);
+        if (!likePost(id)) {
+          alert("Вы уже лайкнули этот пост!");
+        }
+        refreshPosts();
       };
     });
-  }
-
-  // Лайк поста
-  function likePost(id) {
-    const userPosts = users[loggedInUser].posts;
-    const post = userPosts.find(p => p.id === id);
-    if (!post) return;
-    if (post.likedBy.includes(loggedInUser)) {
-      alert("Вы уже лайкнули этот пост!");
-      return;
-    }
-    post.likes++;
-    post.likedBy.push(loggedInUser);
-    saveUsers();
-    refreshPosts();
   }
 
   // Отправить личное сообщение
@@ -319,50 +303,62 @@
     const recipient = messageRecipient.value.trim();
     const text = messageInput.value.trim();
     if (!recipient || !text) {
-      alert("Введите получателя и текст сообщения");
+      alert("Заполните поля получателя и сообщения!");
       return;
     }
-    if (!users[recipient]) {
-      alert("Пользователь не найден");
+    if (!sendMessage(recipient, text)) {
+      alert("Пользователь не найден или ошибка отправки!");
       return;
     }
-    if (!users[recipient].messages[loggedInUser]) {
-      users[recipient].messages[loggedInUser] = [];
-    }
-    users[recipient].messages[loggedInUser].push({
-      text,
-      date: new Date().toISOString()
-    });
-    saveUsers();
     messageInput.value = "";
-    messageRecipient.value = "";
-    alert(`Сообщение отправлено ${recipient}`);
+    alert("Сообщение отправлено!");
     refreshMessages();
   };
 
-  // Обновить ЛС
+  // Обновить личные сообщения
   function refreshMessages() {
     messagesDiv.innerHTML = "";
-    const userMessages = users[loggedInUser].messages || {};
-    const keys = Object.keys(userMessages);
-    if (keys.length === 0) {
-      messagesDiv.textContent = "Нет сообщений";
-      return;
-    }
-    keys.forEach(sender => {
-      userMessages[sender].forEach(m => {
+    const msgs = getUserMessages();
+    for (const fromUser in msgs) {
+      msgs[fromUser].forEach(m => {
         const div = document.createElement("div");
         div.className = "message";
-        div.innerHTML = `<strong>${sender}</strong>: ${m.text} <br><small>${new Date(m.date).toLocaleString()}</small>`;
+        div.innerHTML = `<strong>${fromUser}:</strong> ${m.text} <small>${new Date(m.date).toLocaleString()}</small>`;
         messagesDiv.appendChild(div);
       });
-    });
+    }
   }
 
-  function saveUsers() {
-    localStorage.setItem(usersKey, JSON.stringify(users));
-  }
+  // Экспорт базы
+  exportBtn.onclick = () => {
+    const dataStr = exportUsers();
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bekoUsersBackup.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Импорт базы
+  importBtn.onclick = () => importFile.click();
+
+  importFile.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      if (importUsers(evt.target.result)) {
+        alert("Импорт прошёл успешно! База обновлена.");
+        refreshPosts();
+        refreshMessages();
+      } else {
+        alert("Ошибка импорта: неверный формат файла");
+      }
+    };
+    reader.readAsText(file);
+  };
 </script>
-
 </body>
 </html>
