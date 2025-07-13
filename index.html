@@ -153,16 +153,14 @@
 </div>
 
 <script>
+  // Юзеры хранятся объектом { login: {password: "", posts: [], messages: [] } }
   const usersKey = "bekoUsers";
   const loggedInUserKey = "bekoLoggedInUser";
-  const postsKey = "bekoPosts";
-  const messagesKey = "bekoMessages";
 
   let users = JSON.parse(localStorage.getItem(usersKey)) || {};
   let loggedInUser = localStorage.getItem(loggedInUserKey);
-  let posts = JSON.parse(localStorage.getItem(postsKey)) || [];
-  let messages = JSON.parse(localStorage.getItem(messagesKey)) || {};
 
+  // DOM
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const app = document.getElementById("app");
@@ -187,18 +185,17 @@
   const logoutBtn = document.getElementById("logoutBtn");
   const userNameSpan = document.getElementById("userName");
 
+  // Показать формы
   function showLoginForm() {
     loginForm.style.display = "block";
     registerForm.style.display = "none";
     app.style.display = "none";
   }
-
   function showRegisterForm() {
     loginForm.style.display = "none";
     registerForm.style.display = "block";
     app.style.display = "none";
   }
-
   function showApp() {
     loginForm.style.display = "none";
     registerForm.style.display = "none";
@@ -208,35 +205,38 @@
     refreshMessages();
   }
 
-  if(loggedInUser && users[loggedInUser]) {
+  // Проверка и загрузка сессии
+  if (loggedInUser && users[loggedInUser]) {
     showApp();
   } else {
     showLoginForm();
   }
 
+  // Регистрация
   registerBtn.onclick = () => {
     const login = registerLoginInput.value.trim();
     const pass = registerPasswordInput.value.trim();
-    if(!login || !pass) {
+    if (!login || !pass) {
       alert("Заполните все поля!");
       return;
     }
-    if(users[login]) {
+    if (users[login]) {
       alert("Пользователь уже существует!");
       return;
     }
-    users[login] = pass;
-    localStorage.setItem(usersKey, JSON.stringify(users));
+    users[login] = { password: pass, posts: [], messages: {} };
+    saveUsers();
     alert("Регистрация успешна! Войдите в систему.");
     registerLoginInput.value = "";
     registerPasswordInput.value = "";
     showLoginForm();
   };
 
+  // Вход
   loginBtn.onclick = () => {
     const login = loginInput.value.trim();
     const pass = passwordInput.value.trim();
-    if(users[login] && users[login] === pass) {
+    if (users[login] && users[login].password === pass) {
       loggedInUser = login;
       localStorage.setItem(loggedInUserKey, loggedInUser);
       loginInput.value = "";
@@ -256,27 +256,31 @@
     showLoginForm();
   };
 
+  // Создать пост
   createPostBtn.onclick = () => {
     const text = postInput.value.trim();
-    if(!text) {
+    if (!text) {
       alert("Напишите что-нибудь!");
       return;
     }
-    posts.unshift({
+    const post = {
       id: Date.now(),
       author: loggedInUser,
       text,
       likes: 0,
       likedBy: []
-    });
-    localStorage.setItem(postsKey, JSON.stringify(posts));
+    };
+    users[loggedInUser].posts.unshift(post);
+    saveUsers();
     postInput.value = "";
     refreshPosts();
   };
 
+  // Обновить посты
   function refreshPosts() {
     postsDiv.innerHTML = "";
-    posts.forEach(post => {
+    const userPosts = users[loggedInUser].posts || [];
+    userPosts.forEach(post => {
       const liked = post.likedBy.includes(loggedInUser);
       const div = document.createElement("div");
       div.className = "post";
@@ -295,54 +299,68 @@
     });
   }
 
+  // Лайк поста
   function likePost(id) {
-    const post = posts.find(p => p.id === id);
-    if(!post) return;
-    if(post.likedBy.includes(loggedInUser)) {
+    const userPosts = users[loggedInUser].posts;
+    const post = userPosts.find(p => p.id === id);
+    if (!post) return;
+    if (post.likedBy.includes(loggedInUser)) {
       alert("Вы уже лайкнули этот пост!");
       return;
     }
     post.likes++;
     post.likedBy.push(loggedInUser);
-    localStorage.setItem(postsKey, JSON.stringify(posts));
+    saveUsers();
     refreshPosts();
   }
 
+  // Отправить личное сообщение
   sendMessageBtn.onclick = () => {
     const recipient = messageRecipient.value.trim();
     const text = messageInput.value.trim();
-    if(!recipient || !text) {
+    if (!recipient || !text) {
       alert("Введите получателя и текст сообщения");
       return;
     }
-    if(!users[recipient]) {
+    if (!users[recipient]) {
       alert("Пользователь не найден");
       return;
     }
-    if(!messages[recipient]) messages[recipient] = [];
-    messages[recipient].push({
-      sender: loggedInUser,
+    if (!users[recipient].messages[loggedInUser]) {
+      users[recipient].messages[loggedInUser] = [];
+    }
+    users[recipient].messages[loggedInUser].push({
       text,
       date: new Date().toISOString()
     });
-    localStorage.setItem(messagesKey, JSON.stringify(messages));
+    saveUsers();
     messageInput.value = "";
+    messageRecipient.value = "";
+    alert(`Сообщение отправлено ${recipient}`);
     refreshMessages();
   };
 
+  // Обновить ЛС
   function refreshMessages() {
     messagesDiv.innerHTML = "";
-    const msgs = messages[loggedInUser] || [];
-    if(msgs.length === 0) {
+    const userMessages = users[loggedInUser].messages || {};
+    const keys = Object.keys(userMessages);
+    if (keys.length === 0) {
       messagesDiv.textContent = "Нет сообщений";
       return;
     }
-    msgs.forEach(m => {
-      const div = document.createElement("div");
-      div.className = "message";
-      div.innerHTML = `<strong>${m.sender}</strong>: ${m.text} <br><small>${new Date(m.date).toLocaleString()}</small>`;
-      messagesDiv.appendChild(div);
+    keys.forEach(sender => {
+      userMessages[sender].forEach(m => {
+        const div = document.createElement("div");
+        div.className = "message";
+        div.innerHTML = `<strong>${sender}</strong>: ${m.text} <br><small>${new Date(m.date).toLocaleString()}</small>`;
+        messagesDiv.appendChild(div);
+      });
     });
+  }
+
+  function saveUsers() {
+    localStorage.setItem(usersKey, JSON.stringify(users));
   }
 </script>
 
