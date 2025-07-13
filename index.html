@@ -3,39 +3,128 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>BekoBook - Соцсеть</title>
-<link rel="stylesheet" href="style.css" />
+<title>BekoBook</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f6fa;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+  header {
+    width: 100%;
+    background: #1877f2;
+    color: white;
+    padding: 15px 0;
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  }
+  .container {
+    background: white;
+    padding: 20px 25px;
+    margin: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgb(24 119 242 / 0.4);
+    width: 360px;
+    max-width: 95vw;
+  }
+  input[type=text], input[type=password], textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0 18px;
+    border-radius: 6px;
+    border: 1.8px solid #ddd;
+    box-sizing: border-box;
+    font-size: 16px;
+    resize: vertical;
+  }
+  textarea {
+    min-height: 60px;
+  }
+  button {
+    width: 100%;
+    background-color: #1877f2;
+    color: white;
+    border: none;
+    padding: 12px 0;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background-color: #155db2;
+  }
+  .link {
+    color: #1877f2;
+    margin-top: 10px;
+    cursor: pointer;
+    text-align: center;
+    user-select: none;
+  }
+  .post, .message {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 5px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    background: #f1f3f8;
+  }
+  .author {
+    font-weight: 700;
+    color: #333;
+  }
+  .likes {
+    margin-top: 5px;
+    cursor: pointer;
+    user-select: none;
+    color: #555;
+    font-weight: 600;
+  }
+  .likes.liked {
+    color: #e0245e;
+  }
+  .logout-btn {
+    margin-top: 18px;
+    background-color: #e0245e;
+  }
+</style>
 </head>
 <body>
 
 <header>BekoBook</header>
 
-<div id="loginForm" class="form-container">
+<div id="loginForm" class="container">
   <h2>Вход</h2>
-  <input id="loginInput" type="text" placeholder="Логин" />
-  <input id="passwordInput" type="password" placeholder="Пароль" />
+  <input id="loginInput" type="text" placeholder="Логин" autocomplete="off" />
+  <input id="passwordInput" type="password" placeholder="Пароль" autocomplete="off" />
   <button id="loginBtn">Войти</button>
   <div class="link" id="showRegisterLink">Нет аккаунта? Зарегистрируйтесь</div>
 </div>
 
-<div id="registerForm" class="form-container" style="display:none;">
+<div id="registerForm" class="container" style="display:none;">
   <h2>Регистрация</h2>
-  <input id="registerLoginInput" type="text" placeholder="Логин" />
-  <input id="registerPasswordInput" type="password" placeholder="Пароль" />
+  <input id="registerLoginInput" type="text" placeholder="Логин" autocomplete="off" />
+  <input id="registerPasswordInput" type="password" placeholder="Пароль" autocomplete="off" />
   <button id="registerBtn">Зарегистрироваться</button>
   <div class="link" id="showLoginLink">Есть аккаунт? Войдите</div>
 </div>
 
-<div id="app" class="app-container" style="display:none;">
+<div id="app" class="container" style="display:none;">
   <h2>Привет, <span id="userName"></span>!</h2>
 
-  <textarea id="postInput" class="post-input" placeholder="Что у вас нового?"></textarea>
+  <textarea id="postInput" placeholder="Что у вас нового?"></textarea>
   <button id="createPostBtn">Опубликовать</button>
 
   <div id="posts"></div>
 
   <h3>Личные сообщения</h3>
-  <input id="messageRecipient" type="text" placeholder="Получатель" />
+  <input id="messageRecipient" type="text" placeholder="Получатель" autocomplete="off" />
   <textarea id="messageInput" placeholder="Ваше сообщение" rows="3"></textarea>
   <button id="sendMessageBtn">Отправить сообщение</button>
 
@@ -44,147 +133,213 @@
   <button class="logout-btn" id="logoutBtn">Выйти</button>
 </div>
 
-<script type="module">
-import * as data from './data.js';
+<script>
+  // Данные в localStorage
+  const usersKey = "bekoUsers";
+  const loggedInUserKey = "bekoLoggedInUser";
+  const postsKey = "bekoPosts";
+  const messagesKey = "bekoMessages";
 
-const loginForm = document.getElementById("loginForm");
-const registerForm = document.getElementById("registerForm");
-const app = document.getElementById("app");
-const userNameSpan = document.getElementById("userName");
+  let users = JSON.parse(localStorage.getItem(usersKey)) || {};
+  let loggedInUser = localStorage.getItem(loggedInUserKey);
+  let posts = JSON.parse(localStorage.getItem(postsKey)) || [];
+  let messages = JSON.parse(localStorage.getItem(messagesKey)) || {};
 
-const loginInput = document.getElementById("loginInput");
-const passwordInput = document.getElementById("passwordInput");
-const registerLoginInput = document.getElementById("registerLoginInput");
-const registerPasswordInput = document.getElementById("registerPasswordInput");
-const postInput = document.getElementById("postInput");
-const messageRecipient = document.getElementById("messageRecipient");
-const messageInput = document.getElementById("messageInput");
-const postsDiv = document.getElementById("posts");
-const messagesDiv = document.getElementById("messages");
+  // Элементы
+  const loginForm = document.getElementById("loginForm");
+  const registerForm = document.getElementById("registerForm");
+  const app = document.getElementById("app");
 
-const loginBtn = document.getElementById("loginBtn");
-const registerBtn = document.getElementById("registerBtn");
-const showRegisterLink = document.getElementById("showRegisterLink");
-const showLoginLink = document.getElementById("showLoginLink");
-const createPostBtn = document.getElementById("createPostBtn");
-const sendMessageBtn = document.getElementById("sendMessageBtn");
-const logoutBtn = document.getElementById("logoutBtn");
+  const loginInput = document.getElementById("loginInput");
+  const passwordInput = document.getElementById("passwordInput");
+  const registerLoginInput = document.getElementById("registerLoginInput");
+  const registerPasswordInput = document.getElementById("registerPasswordInput");
+  const postInput = document.getElementById("postInput");
+  const messageRecipient = document.getElementById("messageRecipient");
+  const messageInput = document.getElementById("messageInput");
 
-function showLoginForm() {
-  loginForm.style.display = "block";
-  registerForm.style.display = "none";
-  app.style.display = "none";
-}
+  const postsDiv = document.getElementById("posts");
+  const messagesDiv = document.getElementById("messages");
 
-function showRegisterForm() {
-  loginForm.style.display = "none";
-  registerForm.style.display = "block";
-  app.style.display = "none";
-}
+  const loginBtn = document.getElementById("loginBtn");
+  const registerBtn = document.getElementById("registerBtn");
+  const showRegisterLink = document.getElementById("showRegisterLink");
+  const showLoginLink = document.getElementById("showLoginLink");
+  const createPostBtn = document.getElementById("createPostBtn");
+  const sendMessageBtn = document.getElementById("sendMessageBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const userNameSpan = document.getElementById("userName");
 
-function showApp() {
-  loginForm.style.display = "none";
-  registerForm.style.display = "none";
-  app.style.display = "block";
-  userNameSpan.textContent = data.getLoggedInUser();
-  refreshPosts();
-  refreshMessages();
-}
+  // Показать форму входа
+  function showLoginForm() {
+    loginForm.style.display = "block";
+    registerForm.style.display = "none";
+    app.style.display = "none";
+  }
 
-if (data.isLoggedIn()) {
-  showApp();
-} else {
-  showLoginForm();
-}
+  // Показать форму регистрации
+  function showRegisterForm() {
+    loginForm.style.display = "none";
+    registerForm.style.display = "block";
+    app.style.display = "none";
+  }
 
-loginBtn.onclick = () => {
-  try {
-    data.loginUser(loginInput.value.trim(), passwordInput.value.trim());
+  // Показать главный экран
+  function showApp() {
+    loginForm.style.display = "none";
+    registerForm.style.display = "none";
+    app.style.display = "block";
+    userNameSpan.textContent = loggedInUser;
+    refreshPosts();
+    refreshMessages();
+  }
+
+  // Проверка авторизации
+  if(loggedInUser && users[loggedInUser]) {
     showApp();
-  } catch(e) {
-    alert(e.message);
-  }
-};
-
-registerBtn.onclick = () => {
-  try {
-    data.registerUser(registerLoginInput.value.trim(), registerPasswordInput.value.trim());
-    alert("Регистрация успешна! Войдите.");
+  } else {
     showLoginForm();
-  } catch(e) {
-    alert(e.message);
   }
-};
 
-showRegisterLink.onclick = showRegisterForm;
-showLoginLink.onclick = showLoginForm;
+  // Регистрация
+  registerBtn.onclick = () => {
+    const login = registerLoginInput.value.trim();
+    const pass = registerPasswordInput.value.trim();
+    if(!login || !pass) {
+      alert("Заполните все поля!");
+      return;
+    }
+    if(users[login]) {
+      alert("Пользователь уже существует!");
+      return;
+    }
+    users[login] = pass;
+    localStorage.setItem(usersKey, JSON.stringify(users));
+    alert("Регистрация успешна! Теперь войдите.");
+    registerLoginInput.value = "";
+    registerPasswordInput.value = "";
+    showLoginForm();
+  };
 
-createPostBtn.onclick = () => {
-  try {
-    data.createPost(postInput.value.trim());
+  // Вход
+  loginBtn.onclick = () => {
+    const login = loginInput.value.trim();
+    const pass = passwordInput.value.trim();
+    if(users[login] && users[login] === pass) {
+      loggedInUser = login;
+      localStorage.setItem(loggedInUserKey, loggedInUser);
+      loginInput.value = "";
+      passwordInput.value = "";
+      showApp();
+    } else {
+      alert("Неверный логин или пароль!");
+    }
+  };
+
+  // Ссылки переключения форм
+  showRegisterLink.onclick = showRegisterForm;
+  showLoginLink.onclick = showLoginForm;
+
+  // Выход
+  logoutBtn.onclick = () => {
+    loggedInUser = null;
+    localStorage.removeItem(loggedInUserKey);
+    showLoginForm();
+  };
+
+  // Создать пост
+  createPostBtn.onclick = () => {
+    const text = postInput.value.trim();
+    if(!text) {
+      alert("Напишите что-нибудь!");
+      return;
+    }
+    posts.unshift({
+      id: Date.now(),
+      author: loggedInUser,
+      text,
+      likes: 0,
+      likedBy: []
+    });
+    localStorage.setItem(postsKey, JSON.stringify(posts));
     postInput.value = "";
     refreshPosts();
-  } catch(e) {
-    alert(e.message);
-  }
-};
+  };
 
-sendMessageBtn.onclick = () => {
-  try {
-    data.sendMessage(messageRecipient.value.trim(), messageInput.value.trim());
+  // Обновить посты
+  function refreshPosts() {
+    postsDiv.innerHTML = "";
+    posts.forEach(post => {
+      const liked = post.likedBy.includes(loggedInUser);
+      const div = document.createElement("div");
+      div.className = "post";
+      div.innerHTML = `
+        <div class="author">${post.author}</div>
+        <div>${post.text}</div>
+        <div class="likes ${liked ? "liked" : ""}" data-id="${post.id}">❤️ ${post.likes} ${liked ? "(Лайкнуто)" : ""}</div>
+      `;
+      postsDiv.appendChild(div);
+    });
+    postsDiv.querySelectorAll(".likes").forEach(el => {
+      el.onclick = () => {
+        const id = +el.dataset.id;
+        likePost(id);
+      };
+    });
+  }
+
+  // Лайкнуть пост
+  function likePost(id) {
+    const post = posts.find(p => p.id === id);
+    if(!post) return;
+    if(post.likedBy.includes(loggedInUser)) {
+      alert("Вы уже лайкнули этот пост!");
+      return;
+    }
+    post.likes++;
+    post.likedBy.push(loggedInUser);
+    localStorage.setItem(postsKey, JSON.stringify(posts));
+    refreshPosts();
+  }
+
+  // Отправить сообщение
+  sendMessageBtn.onclick = () => {
+    const recipient = messageRecipient.value.trim();
+    const text = messageInput.value.trim();
+    if(!recipient || !text) {
+      alert("Введите получателя и текст сообщения");
+      return;
+    }
+    if(!users[recipient]) {
+      alert("Пользователь не найден");
+      return;
+    }
+    if(!messages[recipient]) messages[recipient] = [];
+    messages[recipient].push({
+      sender: loggedInUser,
+      text,
+      date: new Date().toISOString()
+    });
+    localStorage.setItem(messagesKey, JSON.stringify(messages));
     messageInput.value = "";
     refreshMessages();
-  } catch(e) {
-    alert(e.message);
+  };
+
+  // Обновить сообщения
+  function refreshMessages() {
+    messagesDiv.innerHTML = "";
+    const msgs = messages[loggedInUser] || [];
+    if(msgs.length === 0) {
+      messagesDiv.textContent = "Нет сообщений";
+      return;
+    }
+    msgs.forEach(m => {
+      const div = document.createElement("div");
+      div.className = "message";
+      div.innerHTML = `<strong>${m.sender}</strong>: ${m.text} <br><small>${new Date(m.date).toLocaleString()}</small>`;
+      messagesDiv.appendChild(div);
+    });
   }
-};
-
-logoutBtn.onclick = () => {
-  data.logoutUser();
-  showLoginForm();
-};
-
-function refreshPosts() {
-  postsDiv.innerHTML = "";
-  const posts = data.getPosts();
-  posts.forEach(post => {
-    const div = document.createElement("div");
-    div.className = "post";
-    const liked = post.likedBy.includes(data.getLoggedInUser());
-    div.innerHTML = `
-      <div class="author">${post.author}</div>
-      <div>${post.text}</div>
-      <div class="likes ${liked ? "liked" : ""}" data-id="${post.id}">❤️ ${post.likes} ${liked ? "(Лайкнуто)" : ""}</div>
-    `;
-    postsDiv.appendChild(div);
-  });
-
-  postsDiv.querySelectorAll(".likes").forEach(el => {
-    el.onclick = () => {
-      try {
-        data.likePost(+el.dataset.id);
-        refreshPosts();
-      } catch(e) {
-        alert(e.message);
-      }
-    };
-  });
-}
-
-function refreshMessages() {
-  messagesDiv.innerHTML = "";
-  const msgs = data.getMessagesForUser(data.getLoggedInUser());
-  if (msgs.length === 0) {
-    messagesDiv.textContent = "Нет сообщений";
-    return;
-  }
-  msgs.forEach(msg => {
-    const div = document.createElement("div");
-    div.className = "message";
-    div.innerHTML = `<strong>${msg.sender}</strong>: ${msg.text}<br><small>${new Date(msg.date).toLocaleString()}</small>`;
-    messagesDiv.appendChild(div);
-  });
-}
 </script>
 
 </body>
