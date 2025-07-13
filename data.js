@@ -1,7 +1,10 @@
+// data.js — Хранилище пользователей и функций для BekoBook
+
 const usersKey = "bekoUsers";
 const loggedInUserKey = "bekoLoggedInUser";
 
 if (!localStorage.getItem(usersKey)) {
+  // Создаём начальных юзеров — чтобы сразу тестить
   const initialUsers = {
     "permskiy71": { password: "123", posts: [], messages: {} },
     "Egorka_Aks": { password: "123", posts: [], messages: {} }
@@ -9,7 +12,7 @@ if (!localStorage.getItem(usersKey)) {
   localStorage.setItem(usersKey, JSON.stringify(initialUsers));
 }
 
-let users = JSON.parse(localStorage.getItem(usersKey)) || {};
+let users = JSON.parse(localStorage.getItem(usersKey));
 let loggedInUser = localStorage.getItem(loggedInUserKey);
 
 function saveUsers() {
@@ -39,6 +42,10 @@ function registerUser(login, pass) {
   return false;
 }
 
+function getLoggedInUser() {
+  return loggedInUser;
+}
+
 function createPost(text) {
   if (!loggedInUser) return;
   const post = {
@@ -58,7 +65,7 @@ function likePost(id) {
     const userPosts = users[user].posts;
     const post = userPosts.find(p => p.id === id);
     if (post) {
-      if (post.likedBy.includes(loggedInUser)) return false;
+      if (post.likedBy.includes(loggedInUser)) return false; // Уже лайкал
       post.likes++;
       post.likedBy.push(loggedInUser);
       saveUsers();
@@ -70,9 +77,7 @@ function likePost(id) {
 
 function sendMessage(recipient, text) {
   if (!loggedInUser) return false;
-  if (!users[recipient]) {
-    users[recipient] = { password: "", posts: [], messages: {} };
-  }
+  if (!users[recipient]) return false; // Нет такого юзера — не отправляем
   if (!users[recipient].messages[loggedInUser]) {
     users[recipient].messages[loggedInUser] = [];
   }
@@ -84,6 +89,11 @@ function sendMessage(recipient, text) {
   return true;
 }
 
+function getUserMessages() {
+  if (!loggedInUser) return {};
+  return users[loggedInUser].messages || {};
+}
+
 function getAllPosts() {
   let allPosts = [];
   for (const user in users) {
@@ -93,15 +103,6 @@ function getAllPosts() {
   return allPosts;
 }
 
-function getUserMessages() {
-  if (!loggedInUser) return {};
-  return users[loggedInUser].messages || {};
-}
-
 function getAllUserLogins() {
   return Object.keys(users);
-}
-
-function getLoggedInUser() {
-  return loggedInUser;
 }
