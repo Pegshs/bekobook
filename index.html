@@ -119,26 +119,29 @@
     let loggedInUser = localStorage.getItem("loggedInUser");
     let posts = JSON.parse(localStorage.getItem("posts")) || [];
     let messages = JSON.parse(localStorage.getItem("messages")) || {};
-    let profiles = JSON.parse(localStorage.getItem("profiles")) || {};
 
+    // Загружаем интерфейс в зависимости от состояния входа
     if (loggedInUser) {
       showApp();
     } else {
       showLoginForm();
     }
 
+    // Показываем форму входа
     function showLoginForm() {
       document.getElementById("loginForm").style.display = 'block';
       document.getElementById("registerForm").style.display = 'none';
       document.getElementById("app").style.display = 'none';
     }
 
+    // Показываем форму регистрации
     function showRegisterForm() {
       document.getElementById("loginForm").style.display = 'none';
       document.getElementById("registerForm").style.display = 'block';
       document.getElementById("app").style.display = 'none';
     }
 
+    // Показываем главный интерфейс приложения
     function showApp() {
       document.getElementById("loginForm").style.display = 'none';
       document.getElementById("registerForm").style.display = 'none';
@@ -147,6 +150,7 @@
       displayMessages();
     }
 
+    // Функция входа
     function login() {
       const login = document.getElementById("loginInput").value;
       const password = document.getElementById("passwordInput").value;
@@ -160,6 +164,7 @@
       }
     }
 
+    // Функция регистрации
     function register() {
       const login = document.getElementById("registerLoginInput").value;
       const password = document.getElementById("registerPasswordInput").value;
@@ -174,22 +179,24 @@
       }
     }
 
+    // Создание нового поста
     function createPost() {
       const text = document.getElementById("postInput").value.trim();
       if (text) {
         const newPost = { id: Date.now(), author: loggedInUser, text, likes: 0, likedBy: [] };
-        posts.unshift(newPost);
-        localStorage.setItem("posts", JSON.stringify(posts));
-        displayPosts();
-        document.getElementById("postInput").value = '';  // Очистить поле ввода
+        posts.unshift(newPost);  // Добавляем новый пост в начало массива
+        localStorage.setItem("posts", JSON.stringify(posts));  // Сохраняем в localStorage
+        displayPosts();  // Обновляем отображение постов
+        document.getElementById("postInput").value = '';  // Очищаем поле ввода
       } else {
         alert("Введите текст для поста!");
       }
     }
 
+    // Отображение всех постов
     function displayPosts() {
       const postsContainer = document.getElementById("posts");
-      postsContainer.innerHTML = '';
+      postsContainer.innerHTML = '';  // Очищаем контейнер перед добавлением новых постов
       posts.forEach(post => {
         const postElement = document.createElement("div");
         postElement.className = "post";
@@ -206,6 +213,7 @@
       });
     }
 
+    // Лайк для поста
     function likePost(postId) {
       const post = posts.find(p => p.id === postId);
       if (post) {
@@ -214,12 +222,13 @@
         } else {
           post.likes++;
           post.likedBy.push(loggedInUser);
-          localStorage.setItem("posts", JSON.stringify(posts));
-          displayPosts();
+          localStorage.setItem("posts", JSON.stringify(posts));  // Обновляем сохранение в localStorage
+          displayPosts();  // Обновляем отображение постов
         }
       }
     }
 
+    // Отправка личного сообщения
     function sendMessage() {
       const recipient = document.getElementById("messageRecipient").value.trim();
       const messageText = document.getElementById("messageInput").value.trim();
@@ -229,18 +238,17 @@
         return;
       }
 
-      // Добавление сообщения
+      // Добавляем сообщение
       if (!messages[recipient]) {
         messages[recipient] = [];
       }
 
       messages[recipient].push({ sender: loggedInUser, text: messageText, date: new Date() });
-      localStorage.setItem("messages", JSON.stringify(messages));
-
-      // Отображение сообщений
-      displayMessages();
+      localStorage.setItem("messages", JSON.stringify(messages));  // Сохраняем в localStorage
+      displayMessages();  // Отображаем сообщения
     }
 
+    // Отображение личных сообщений
     function displayMessages() {
       const messagesContainer = document.getElementById("messages");
       messagesContainer.innerHTML = '';
@@ -260,6 +268,7 @@
       }
     }
 
+    // Выход из аккаунта
     function logout() {
       localStorage.removeItem("loggedInUser");
       loggedInUser = null;
