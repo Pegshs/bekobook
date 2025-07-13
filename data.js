@@ -1,9 +1,6 @@
-// data.js
-
 const usersKey = "bekoUsers";
 const loggedInUserKey = "bekoLoggedInUser";
 
-// Создаём начальных пользователей, если их нет в localStorage
 if (!localStorage.getItem(usersKey)) {
   const initialUsers = {
     "permskiy71": { password: "123", posts: [], messages: {} },
@@ -12,7 +9,6 @@ if (!localStorage.getItem(usersKey)) {
   localStorage.setItem(usersKey, JSON.stringify(initialUsers));
 }
 
-// После записи сразу обновляем users из localStorage
 let users = JSON.parse(localStorage.getItem(usersKey)) || {};
 let loggedInUser = localStorage.getItem(loggedInUserKey);
 
@@ -72,7 +68,6 @@ function likePost(id) {
   return false;
 }
 
-// Отправка сообщения — создаём получателя если нет
 function sendMessage(recipient, text) {
   if (!loggedInUser) return false;
   if (!users[recipient]) {
@@ -101,21 +96,6 @@ function getAllPosts() {
 function getUserMessages() {
   if (!loggedInUser) return {};
   return users[loggedInUser].messages || {};
-}
-
-function exportUsers() {
-  return JSON.stringify(users, null, 2);
-}
-
-function importUsers(jsonStr) {
-  try {
-    const importedUsers = JSON.parse(jsonStr);
-    users = { ...users, ...importedUsers };
-    saveUsers();
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function getAllUserLogins() {
