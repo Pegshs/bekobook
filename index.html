@@ -3,319 +3,302 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>BekoBook</title>
+<title>BekoBook — соцсеть</title>
 <style>
   body {
     font-family: Arial, sans-serif;
-    background: #fff;
-    margin: 0; padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    background: #121212;
+    color: #eee;
+    margin: 0; padding: 20px;
   }
-  header {
+  h1 { text-align: center; }
+  .hidden { display: none; }
+  input, textarea, select, button {
+    background: #222;
+    border: 1px solid #444;
+    color: #eee;
+    padding: 8px;
+    margin: 5px 0;
     width: 100%;
-    background: #4a90e2;
-    color: white;
-    padding: 15px;
-    font-size: 26px;
-    font-weight: bold;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  }
-  .container {
-    width: 380px;
-    max-width: 95vw;
-    background: #f9f9f9;
-    margin: 20px 0;
-    padding: 15px 20px;
-    border-radius: 8px;
-    box-shadow: 0 3px 10px rgb(0 0 0 / 0.1);
-  }
-  input[type=text], input[type=password], textarea {
-    width: 100%;
-    margin: 10px 0;
-    padding: 9px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: 1.5px solid #ccc;
     box-sizing: border-box;
   }
-  textarea {
-    resize: vertical;
-  }
   button {
-    width: 100%;
-    background-color: #4a90e2;
-    border: none;
-    padding: 11px 0;
-    font-size: 18px;
-    font-weight: 700;
-    color: white;
-    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
   }
-  button:hover {
-    background-color: #357abd;
+  #loginSection, #registerSection, #mainSection {
+    max-width: 400px;
+    margin: 0 auto 30px auto;
+    background: #1e1e1e;
+    padding: 20px;
+    border-radius: 8px;
   }
-  .link {
-    margin-top: 12px;
-    color: #4a90e2;
-    text-align: center;
-    cursor: pointer;
-    user-select: none;
+  #posts {
+    max-width: 700px;
+    margin: 0 auto;
   }
   .post {
-    background: white;
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 14px;
-    box-shadow: 0 2px 6px rgb(0 0 0 / 0.05);
-  }
-  .author {
-    font-weight: 700;
-    color: #222;
-    margin-bottom: 6px;
-  }
-  .likes {
-    margin-top: 8px;
-    color: #777;
-    cursor: pointer;
-    user-select: none;
-    font-weight: 600;
-  }
-  .likes.liked {
-    color: #e0245e;
-  }
-  .logout-btn {
-    margin-top: 20px;
-    background-color: #e0245e;
-  }
-  #messages {
-    margin-top: 15px;
-    max-height: 200px;
-    overflow-y: auto;
-    background: #fff;
+    background: #222;
+    border-radius: 6px;
     padding: 10px;
+    margin-bottom: 10px;
+  }
+  .post-author {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  .post-text {
+    margin-bottom: 10px;
+  }
+  .like-btn {
+    background: #333;
+    border: none;
+    color: #eee;
+    padding: 5px 10px;
+    border-radius: 4px;
+  }
+  .like-btn.liked {
+    background: #4caf50;
+  }
+  #messageSection {
+    max-width: 400px;
+    margin: 0 auto 30px auto;
+    background: #1e1e1e;
+    padding: 20px;
     border-radius: 8px;
-    box-shadow: inset 0 0 5px rgb(0 0 0 / 0.05);
   }
   .message {
-    margin-bottom: 8px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 6px;
+    background: #333;
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 5px;
   }
-  .message strong {
-    color: #333;
-  }
-  .message small {
-    color: #999;
-  }
-  #exportImportSection {
-    margin-top: 20px;
-    text-align: center;
+  select {
+    margin-bottom: 10px;
   }
 </style>
 </head>
 <body>
+<h1>BekoBook — соцсеть</h1>
 
-<header>BekoBook</header>
-
-<div id="loginForm" class="container">
+<div id="loginSection">
   <h2>Вход</h2>
-  <input id="loginInput" type="text" placeholder="Логин" autocomplete="off" />
-  <input id="passwordInput" type="password" placeholder="Пароль" autocomplete="off" />
-  <button id="loginBtn">Войти</button>
-  <div class="link" id="showRegisterLink">Нет аккаунта? Зарегистрируйтесь</div>
+  <input id="loginLogin" type="text" placeholder="Логин" />
+  <input id="loginPass" type="password" placeholder="Пароль" />
+  <button id="btnLogin">Войти</button>
+  <p>Нет аккаунта? <button id="showRegisterBtn">Зарегистрироваться</button></p>
 </div>
 
-<div id="registerForm" class="container" style="display:none;">
+<div id="registerSection" class="hidden">
   <h2>Регистрация</h2>
-  <input id="registerLoginInput" type="text" placeholder="Логин" autocomplete="off" />
-  <input id="registerPasswordInput" type="password" placeholder="Пароль" autocomplete="off" />
-  <button id="registerBtn">Зарегистрироваться</button>
-  <div class="link" id="showLoginLink">Есть аккаунт? Войдите</div>
+  <input id="regLogin" type="text" placeholder="Логин" />
+  <input id="regPass" type="password" placeholder="Пароль" />
+  <button id="btnRegister">Зарегистрироваться</button>
+  <p>Уже есть аккаунт? <button id="showLoginBtn">Войти</button></p>
 </div>
 
-<div id="app" class="container" style="display:none;">
-  <h2>Привет, <span id="userName"></span>!</h2>
+<div id="mainSection" class="hidden">
+  <p>Вы вошли как <span id="currentUser"></span> <button id="btnLogout">Выйти</button></p>
 
-  <textarea id="postInput" placeholder="Что у вас нового?"></textarea>
-  <button id="createPostBtn">Опубликовать</button>
+  <section id="newPostSection">
+    <h2>Новый пост</h2>
+    <textarea id="postText" rows="3" placeholder="Что у тебя нового?"></textarea>
+    <button id="btnPost">Опубликовать</button>
+  </section>
 
-  <div id="posts"></div>
+  <section id="postsSection">
+    <h2>Посты</h2>
+    <div id="posts"></div>
+  </section>
 
-  <h3>Личные сообщения</h3>
-  <input id="messageRecipient" type="text" placeholder="Получатель" autocomplete="off" />
-  <textarea id="messageInput" placeholder="Ваше сообщение" rows="3"></textarea>
-  <button id="sendMessageBtn">Отправить сообщение</button>
+  <section id="messageSection">
+    <h2>Личные сообщения</h2>
+    <label for="recipientSelect">Выберите получателя:</label>
+    <select id="recipientSelect"></select>
+    <textarea id="messageText" rows="3" placeholder="Текст сообщения"></textarea>
+    <button id="btnSendMessage">Отправить</button>
 
-  <div id="messages"></div>
-
-  <button class="logout-btn" id="logoutBtn">Выйти</button>
-
-  <div id="exportImportSection">
-    <button id="exportBtn">Экспорт базы</button>
-    <input type="file" id="importFile" style="display:none" />
-    <button id="importBtn">Импорт базы</button>
-  </div>
+    <h3>Входящие сообщения</h3>
+    <div id="messages"></div>
+  </section>
 </div>
 
 <script src="data.js"></script>
 <script>
-  // DOM
-  const loginForm = document.getElementById("loginForm");
-  const registerForm = document.getElementById("registerForm");
-  const app = document.getElementById("app");
+  // Элементы
+  const loginSection = document.getElementById('loginSection');
+  const registerSection = document.getElementById('registerSection');
+  const mainSection = document.getElementById('mainSection');
 
-  const loginInput = document.getElementById("loginInput");
-  const passwordInput = document.getElementById("passwordInput");
-  const registerLoginInput = document.getElementById("registerLoginInput");
-  const registerPasswordInput = document.getElementById("registerPasswordInput");
-  const postInput = document.getElementById("postInput");
-  const messageRecipient = document.getElementById("messageRecipient");
-  const messageInput = document.getElementById("messageInput");
+  const loginLogin = document.getElementById('loginLogin');
+  const loginPass = document.getElementById('loginPass');
+  const btnLogin = document.getElementById('btnLogin');
 
-  const postsDiv = document.getElementById("posts");
-  const messagesDiv = document.getElementById("messages");
+  const regLogin = document.getElementById('regLogin');
+  const regPass = document.getElementById('regPass');
+  const btnRegister = document.getElementById('btnRegister');
 
-  const loginBtn = document.getElementById("loginBtn");
-  const registerBtn = document.getElementById("registerBtn");
-  const showRegisterLink = document.getElementById("showRegisterLink");
-  const showLoginLink = document.getElementById("showLoginLink");
-  const createPostBtn = document.getElementById("createPostBtn");
-  const sendMessageBtn = document.getElementById("sendMessageBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
+  const showRegisterBtn = document.getElementById('showRegisterBtn');
+  const showLoginBtn = document.getElementById('showLoginBtn');
 
-  const exportBtn = document.getElementById("exportBtn");
-  const importBtn = document.getElementById("importBtn");
-  const importFile = document.getElementById("importFile");
+  const currentUserSpan = document.getElementById('currentUser');
+  const btnLogout = document.getElementById('btnLogout');
 
-  const userNameSpan = document.getElementById("userName");
+  const postText = document.getElementById('postText');
+  const btnPost = document.getElementById('btnPost');
+  const postsDiv = document.getElementById('posts');
 
-  // Показать формы
-  function showLoginForm() {
-    loginForm.style.display = "block";
-    registerForm.style.display = "none";
-    app.style.display = "none";
+  const recipientSelect = document.getElementById('recipientSelect');
+  const messageText = document.getElementById('messageText');
+  const btnSendMessage = document.getElementById('btnSendMessage');
+  const messagesDiv = document.getElementById('messages');
+
+  // Функции отображения блоков
+  function showLogin() {
+    loginSection.classList.remove('hidden');
+    registerSection.classList.add('hidden');
+    mainSection.classList.add('hidden');
   }
-  function showRegisterForm() {
-    loginForm.style.display = "none";
-    registerForm.style.display = "block";
-    app.style.display = "none";
+  function showRegister() {
+    loginSection.classList.add('hidden');
+    registerSection.classList.remove('hidden');
+    mainSection.classList.add('hidden');
   }
-  function showApp() {
-    loginForm.style.display = "none";
-    registerForm.style.display = "none";
-    app.style.display = "block";
-    userNameSpan.textContent = loggedInUser;
-    refreshPosts();
-    refreshMessages();
+  function showMain() {
+    loginSection.classList.add('hidden');
+    registerSection.classList.add('hidden');
+    mainSection.classList.remove('hidden');
   }
 
-  // Проверка и загрузка сессии
-  if (loggedInUser && users[loggedInUser]) {
-    showApp();
-  } else {
-    showLoginForm();
+  // Инициализация
+  function init() {
+    if (loggedInUser) {
+      currentUserSpan.textContent = loggedInUser;
+      showMain();
+      refreshPosts();
+      refreshUsersList();
+      refreshMessages();
+    } else {
+      showLogin();
+    }
   }
 
-  // Регистрация
-  registerBtn.onclick = () => {
-    const login = registerLoginInput.value.trim();
-    const pass = registerPasswordInput.value.trim();
+  // Обработчики
+  btnLogin.onclick = () => {
+    const login = loginLogin.value.trim();
+    const pass = loginPass.value.trim();
     if (!login || !pass) {
-      alert("Заполните все поля!");
+      alert("Заполните логин и пароль!");
       return;
     }
-    if (!registerUser(login, pass)) {
-      alert("Пользователь уже существует!");
-      return;
-    }
-    alert("Регистрация успешна! Войдите в систему.");
-    registerLoginInput.value = "";
-    registerPasswordInput.value = "";
-    showLoginForm();
-  };
-
-  // Вход
-  loginBtn.onclick = () => {
-    const login = loginInput.value.trim();
-    const pass = passwordInput.value.trim();
     if (loginUser(login, pass)) {
-      loginInput.value = "";
-      passwordInput.value = "";
-      showApp();
+      currentUserSpan.textContent = login;
+      showMain();
+      refreshPosts();
+      refreshUsersList();
+      refreshMessages();
     } else {
       alert("Неверный логин или пароль!");
     }
   };
 
-  showRegisterLink.onclick = showRegisterForm;
-  showLoginLink.onclick = showLoginForm;
-
-  logoutBtn.onclick = () => {
-    logoutUser();
-    showLoginForm();
+  btnRegister.onclick = () => {
+    const login = regLogin.value.trim();
+    const pass = regPass.value.trim();
+    if (!login || !pass) {
+      alert("Заполните логин и пароль!");
+      return;
+    }
+    if (registerUser(login, pass)) {
+      alert("Регистрация прошла успешно! Войдите в аккаунт.");
+      showLogin();
+    } else {
+      alert("Пользователь с таким логином уже существует!");
+    }
   };
 
-  // Создать пост
-  createPostBtn.onclick = () => {
-    const text = postInput.value.trim();
+  showRegisterBtn.onclick = showRegister;
+  showLoginBtn.onclick = showLogin;
+
+  btnLogout.onclick = () => {
+    logoutUser();
+    location.reload();
+  };
+
+  btnPost.onclick = () => {
+    const text = postText.value.trim();
     if (!text) {
-      alert("Напишите что-нибудь!");
+      alert("Напишите текст поста!");
       return;
     }
     createPost(text);
-    postInput.value = "";
+    postText.value = "";
     refreshPosts();
   };
 
-  // Обновить посты
   function refreshPosts() {
     postsDiv.innerHTML = "";
-    const userPosts = getUserPosts();
-    userPosts.forEach(post => {
-      const liked = post.likedBy.includes(loggedInUser);
+    const posts = getAllPosts();
+    if(posts.length === 0) postsDiv.textContent = "Постов пока нет.";
+    posts.forEach(post => {
       const div = document.createElement("div");
       div.className = "post";
       div.innerHTML = `
-        <div class="author">${post.author}</div>
-        <div>${post.text}</div>
-        <div class="likes ${liked ? "liked" : ""}" data-id="${post.id}">❤ ${post.likes} ${liked ? "(Лайкнуто)" : ""}</div>
+        <div class="post-author">${post.author}</div>
+        <div class="post-text">${post.text}</div>
+        <button class="like-btn ${post.likedBy && post.likedBy.includes(loggedInUser) ? 'liked' : ''}" data-id="${post.id}">
+          ❤️ ${post.likes}
+        </button>
       `;
       postsDiv.appendChild(div);
     });
-    postsDiv.querySelectorAll(".likes").forEach(el => {
-      el.onclick = () => {
-        const id = +el.dataset.id;
-        if (!likePost(id)) {
-          alert("Вы уже лайкнули этот пост!");
-        }
-        refreshPosts();
+
+    // Вешаем события лайка
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.onclick = () => {
+        const id = Number(btn.getAttribute('data-id'));
+        if(likePost(id)) refreshPosts();
+        else alert("Вы уже лайкали этот пост!");
       };
     });
   }
 
-  // Отправить личное сообщение
-  sendMessageBtn.onclick = () => {
-    const recipient = messageRecipient.value.trim();
-    const text = messageInput.value.trim();
+  // Обновление списка пользователей для выбора получателя
+  function refreshUsersList() {
+    recipientSelect.innerHTML = "";
+    const usersList = getAllUserLogins().filter(u => u !== loggedInUser);
+    if(usersList.length === 0) {
+      const opt = document.createElement('option');
+      opt.text = "Нет пользователей";
+      opt.value = "";
+      recipientSelect.appendChild(opt);
+      recipientSelect.disabled = true;
+    } else {
+      recipientSelect.disabled = false;
+      usersList.forEach(user => {
+        const opt = document.createElement('option');
+        opt.text = user;
+        opt.value = user;
+        recipientSelect.appendChild(opt);
+      });
+    }
+  }
+
+  btnSendMessage.onclick = () => {
+    const recipient = recipientSelect.value;
+    const text = messageText.value.trim();
     if (!recipient || !text) {
-      alert("Заполните поля получателя и сообщения!");
+      alert("Выберите получателя и введите сообщение!");
       return;
     }
     if (!sendMessage(recipient, text)) {
       alert("Пользователь не найден или ошибка отправки!");
       return;
     }
-    messageInput.value = "";
+    messageText.value = "";
     alert("Сообщение отправлено!");
     refreshMessages();
   };
 
-  // Обновить личные сообщения
   function refreshMessages() {
     messagesDiv.innerHTML = "";
     const msgs = getUserMessages();
@@ -327,38 +310,10 @@
         messagesDiv.appendChild(div);
       });
     }
+    if(Object.keys(msgs).length === 0) messagesDiv.textContent = "Сообщений нет.";
   }
 
-  // Экспорт базы
-  exportBtn.onclick = () => {
-    const dataStr = exportUsers();
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "bekoUsersBackup.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Импорт базы
-  importBtn.onclick = () => importFile.click();
-
-  importFile.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      if (importUsers(evt.target.result)) {
-        alert("Импорт прошёл успешно! База обновлена.");
-        refreshPosts();
-        refreshMessages();
-      } else {
-        alert("Ошибка импорта: неверный формат файла");
-      }
-    };
-    reader.readAsText(file);
-  };
+  init();
 </script>
 </body>
 </html>
