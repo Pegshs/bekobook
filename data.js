@@ -1,4 +1,12 @@
 // data.js
+if (!localStorage.getItem("bekoUsers")) {
+  const initialUsers = {
+    "permskiy71": { password: "123", posts: [], messages: {} },
+    "Egorka_Aks": { password: "123", posts: [], messages: {} }
+  };
+  localStorage.setItem("bekoUsers", JSON.stringify(initialUsers));
+}
+
 
 const usersKey = "bekoUsers";
 const loggedInUserKey = "bekoLoggedInUser";
