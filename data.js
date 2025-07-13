@@ -101,3 +101,7 @@ function getUserMessages() {
 function getAllUserLogins() {
   return Object.keys(users);
 }
+
+function getLoggedInUser() {
+  return loggedInUser;
+}
