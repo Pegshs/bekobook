@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Мини Телеграмм</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 600px;
+    margin: 30px auto;
+    background: #e6ecf0;
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+  }
+  h1 {
+    text-align: center;
+  }
+  #chat {
+    flex-grow: 1;
+    background: white;
+    border-radius: 8px;
+    padding: 10px;
+    overflow-y: auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+  }
+  .message {
+    margin-bottom: 10px;
+    max-width: 70%;
+    padding: 8px 12px;
+    border-radius: 15px;
+    word-wrap: break-word;
+  }
+  .my-message {
+    background-color: #2979ff;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 0;
+  }
+  .other-message {
+    background-color: #ddd;
+    color: #222;
+    align-self: flex-start;
+    border-bottom-left-radius: 0;
+  }
+  #inputArea {
+    display: flex;
+    gap: 10px;
+  }
+  #messageInput {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 20px;
+    border: none;
+    background-color: #2979ff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #125edb;
+  }
+  #nicknameSection {
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
+  }
+  #nicknameInput {
+    flex-grow: 1;
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+  }
+</style>
+</head>
+<body>
+
+<h1>Мини Телеграмм</h1>
+
+<div id="nicknameSection">
+  <input type="text" id="nicknameInput" placeholder="Введите ник" />
+  <button id="setNickBtn">Установить ник</button>
+</div>
+
+<div id="chat"></div>
+
+<div id="inputArea">
+  <input type="text" id="messageInput" placeholder="Написать сообщение..." autocomplete="off" />
+  <button id="sendBtn">Отправить</button>
+</div>
+
+<script>
+  const chat = document.getElementById('chat');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const nicknameInput = document.getElementById('nicknameInput');
+  const setNickBtn = document.getElementById('setNickBtn');
+
+  // Локальное хранилище ключи
+  const STORAGE_NICK = 'miniTelegramNick';
+  const STORAGE_MESSAGES = 'miniTelegramMessages';
+
+  // Получаем ник или ставим дефолт
+  let nickname = localStorage.getItem(STORAGE_NICK) || 'Аноним';
+
+  nicknameInput.value = nickname;
+
+  // Загружаем сообщения из localStorage или пустой массив
+  let messages = JSON.parse(localStorage.getItem(STORAGE_MESSAGES) || '[]');
+
+  // Сохранить сообщения
+  function saveMessages() {
+    localStorage.setItem(STORAGE_MESSAGES, JSON.stringify(messages));
+  }
+
+  // Добавить сообщение
+  function addMessage(text, nick) {
+    messages.push({
+      id: Date.now(),
+      text,
+      nick,
+    });
+    saveMessages();
+    renderMessages();
+    scrollChatToBottom();
+  }
+
+  // Отрисовать сообщения
+  function renderMessages() {
+    chat.innerHTML = '';
+    messages.forEach(m => {
+      const div = document.createElement('div');
+      div.classList.add('message');
+      div.textContent = `${m.nick}: ${m.text}`;
+      if (m.nick === nickname) {
+        div.classList.add('my-message');
+      } else {
+        div.classList.add('other-message');
+      }
+      chat.appendChild(div);
+    });
+  }
+
+  // Скролл в самый низ
+  function scrollChatToBottom() {
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  // Отправка сообщения по кнопке
+  sendBtn.onclick = () => {
+    const text = messageInput.value.trim();
+    if (!text) return alert('Напиши сообщение!');
+    addMessage(text, nickname);
+    messageInput.value = '';
+    messageInput.focus();
+  };
+
+  // Отправка сообщения по Enter
+  messageInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendBtn.click();
+    }
+  });
+
+  // Установка ника
+  setNickBtn.onclick = () => {
+    const newNick = nicknameInput.value.trim();
+    if (!newNick) return alert('Ник не может быть пустым!');
+    nickname = newNick;
+    localStorage.setItem(STORAGE_NICK, nickname);
+    renderMessages();
+  };
+
+  // Изначальная отрисовка
+  renderMessages();
+  scrollChatToBottom();
+</script>
+
+</body>
+</html>
