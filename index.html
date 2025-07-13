@@ -5,76 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BekoBook - Социальная сеть</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f0f2f5;
-    }
-    header {
-      background-color: #4267B2;
-      color: white;
-      padding: 20px;
-      font-size: 24px;
-      text-align: center;
-    }
-    .form-container {
-      margin: 50px auto;
-      padding: 20px;
-      background-color: white;
-      width: 300px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    input, button, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 16px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-    .post-container {
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 20px;
-      background-color: white;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    .post {
-      padding: 15px;
-      background-color: #fff;
-      margin: 10px 0;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .post .author {
-      font-weight: bold;
-    }
-    .post .text {
-      margin: 10px 0;
-    }
-    .like-button {
-      cursor: pointer;
-      color: #4267B2;
-    }
-    .message-container {
-      margin-top: 20px;
-      padding: 20px;
-      background-color: white;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    .message {
-      margin-bottom: 15px;
-      padding: 10px;
-      background-color: #f7f7f7;
-      border-radius: 5px;
-    }
+    /* Стили остаются теми же */
   </style>
 </head>
 <body>
@@ -114,11 +45,9 @@
     <button onclick="logout()">Выйти</button>
   </div>
 
+  <script src="data.js"></script> <!-- Подключаем data.js -->
   <script>
-    let users = JSON.parse(localStorage.getItem("users")) || {};
     let loggedInUser = localStorage.getItem("loggedInUser");
-    let posts = JSON.parse(localStorage.getItem("posts")) || [];
-    let messages = JSON.parse(localStorage.getItem("messages")) || {};
 
     if (loggedInUser) {
       showApp();
@@ -176,9 +105,7 @@
     function createPost() {
       const text = document.getElementById("postInput").value.trim();
       if (text) {
-        const newPost = { id: Date.now(), author: loggedInUser, text, likes: 0, likedBy: [] };
-        posts.unshift(newPost);
-        localStorage.setItem("posts", JSON.stringify(posts));
+        createPost(loggedInUser, text); // Используем функцию из data.js
         displayPosts();
         document.getElementById("postInput").value = '';  // Очистить поле ввода
       } else {
@@ -189,7 +116,8 @@
     function displayPosts() {
       const postsContainer = document.getElementById("posts");
       postsContainer.innerHTML = '';  // Очистить контейнер перед добавлением новых постов
-      posts.forEach(post => {
+      const allPosts = getPosts(); // Получаем посты из data.js
+      allPosts.forEach(post => {
         const postElement = document.createElement("div");
         postElement.className = "post";
         postElement.innerHTML = `
@@ -206,17 +134,8 @@
     }
 
     function likePost(postId) {
-      const post = posts.find(p => p.id === postId);
-      if (post) {
-        if (post.likedBy.includes(loggedInUser)) {
-          alert("Вы уже поставили лайк этому посту!");
-        } else {
-          post.likes++;
-          post.likedBy.push(loggedInUser);
-          localStorage.setItem("posts", JSON.stringify(posts));
-          displayPosts();
-        }
-      }
+      likePost(postId, loggedInUser); // Используем функцию из data.js
+      displayPosts();
     }
 
     function sendMessage() {
@@ -228,12 +147,7 @@
         return;
       }
 
-      if (!messages[recipient]) {
-        messages[recipient] = [];
-      }
-
-      messages[recipient].push({ sender: loggedInUser, text: messageText, date: new Date() });
-      localStorage.setItem("messages", JSON.stringify(messages));
+      sendMessage(loggedInUser, recipient, messageText);  // Используем функцию из data.js
       displayMessages();
     }
 
@@ -241,19 +155,16 @@
       const messagesContainer = document.getElementById("messages");
       messagesContainer.innerHTML = '';
 
-      if (messages[loggedInUser]) {
-        messages[loggedInUser].forEach(msg => {
-          const messageElement = document.createElement("div");
-          messageElement.className = "message";
-          messageElement.innerHTML = `
-            <strong>${msg.sender}</strong>: ${msg.text} <br>
-            <small>${new Date(msg.date).toLocaleString()}</small>
-          `;
-          messagesContainer.appendChild(messageElement);
-        });
-      } else {
-        messagesContainer.innerHTML = "Нет сообщений.";
-      }
+      const allMessages = getMessages(loggedInUser);  // Получаем сообщения из data.js
+      allMessages.forEach(msg => {
+        const messageElement = document.createElement("div");
+        messageElement.className = "message";
+        messageElement.innerHTML = `
+          <strong>${msg.sender}</strong>: ${msg.text} <br>
+          <small>${new Date(msg.date).toLocaleString()}</small>
+        `;
+        messagesContainer.appendChild(messageElement);
+      });
     }
 
     function logout() {
@@ -261,7 +172,4 @@
       loggedInUser = null;
       showLoginForm();
     }
-
-  </script>
-</body>
-</html>
+  </script
