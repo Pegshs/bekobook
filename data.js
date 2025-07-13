@@ -48,19 +48,27 @@ function createPost(text) {
 
 function likePost(id) {
   if (!loggedInUser) return false;
-  const userPosts = users[loggedInUser].posts;
-  const post = userPosts.find(p => p.id === id);
-  if (!post) return false;
-  if (post.likedBy.includes(loggedInUser)) return false;
-  post.likes++;
-  post.likedBy.push(loggedInUser);
-  saveUsers();
-  return true;
+  // Ищем пост у всех пользователей, чтобы можно было лайкать не только свои посты
+  for (const user in users) {
+    const userPosts = users[user].posts;
+    const post = userPosts.find(p => p.id === id);
+    if (post) {
+      if (post.likedBy.includes(loggedInUser)) return false;
+      post.likes++;
+      post.likedBy.push(loggedInUser);
+      saveUsers();
+      return true;
+    }
+  }
+  return false;
 }
 
+// Отправка сообщения — если получателя нет, создаём его
 function sendMessage(recipient, text) {
   if (!loggedInUser) return false;
-  if (!users[recipient]) return false;
+  if (!users[recipient]) {
+    users[recipient] = { password: "", posts: [], messages: {} };
+  }
   if (!users[recipient].messages[loggedInUser]) {
     users[recipient].messages[loggedInUser] = [];
   }
@@ -72,9 +80,15 @@ function sendMessage(recipient, text) {
   return true;
 }
 
-function getUserPosts() {
-  if (!loggedInUser) return [];
-  return users[loggedInUser].posts || [];
+// Получаем посты всех пользователей (чтобы видеть чужие посты)
+function getAllPosts() {
+  let allPosts = [];
+  for (const user in users) {
+    allPosts = allPosts.concat(users[user].posts || []);
+  }
+  // Отсортируем по дате
+  allPosts.sort((a,b) => b.id - a.id);
+  return allPosts;
 }
 
 function getUserMessages() {
@@ -82,10 +96,12 @@ function getUserMessages() {
   return users[loggedInUser].messages || {};
 }
 
+// Экспорт базы
 function exportUsers() {
   return JSON.stringify(users, null, 2);
 }
 
+// Импорт базы
 function importUsers(jsonStr) {
   try {
     const importedUsers = JSON.parse(jsonStr);
@@ -95,4 +111,9 @@ function importUsers(jsonStr) {
   } catch {
     return false;
   }
+}
+
+// Возвращаем список логинов для удобства
+function getAllUserLogins() {
+  return Object.keys(users);
 }
