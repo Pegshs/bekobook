@@ -1,16 +1,18 @@
 // data.js
-if (!localStorage.getItem("bekoUsers")) {
-  const initialUsers = {
-    "permskiy71": { password: "123", posts: [], messages: {} },
-    "Egorka_Aks": { password: "123", posts: [], messages: {} }
-  };
-  localStorage.setItem("bekoUsers", JSON.stringify(initialUsers));
-}
-
 
 const usersKey = "bekoUsers";
 const loggedInUserKey = "bekoLoggedInUser";
 
+// Создаём начальных пользователей, если их нет в localStorage
+if (!localStorage.getItem(usersKey)) {
+  const initialUsers = {
+    "permskiy71": { password: "123", posts: [], messages: {} },
+    "Egorka_Aks": { password: "123", posts: [], messages: {} }
+  };
+  localStorage.setItem(usersKey, JSON.stringify(initialUsers));
+}
+
+// После записи сразу обновляем users из localStorage
 let users = JSON.parse(localStorage.getItem(usersKey)) || {};
 let loggedInUser = localStorage.getItem(loggedInUserKey);
 
@@ -56,7 +58,6 @@ function createPost(text) {
 
 function likePost(id) {
   if (!loggedInUser) return false;
-  // Ищем пост у всех пользователей, чтобы можно было лайкать не только свои посты
   for (const user in users) {
     const userPosts = users[user].posts;
     const post = userPosts.find(p => p.id === id);
@@ -71,7 +72,7 @@ function likePost(id) {
   return false;
 }
 
-// Отправка сообщения — если получателя нет, создаём его
+// Отправка сообщения — создаём получателя если нет
 function sendMessage(recipient, text) {
   if (!loggedInUser) return false;
   if (!users[recipient]) {
@@ -88,13 +89,11 @@ function sendMessage(recipient, text) {
   return true;
 }
 
-// Получаем посты всех пользователей (чтобы видеть чужие посты)
 function getAllPosts() {
   let allPosts = [];
   for (const user in users) {
     allPosts = allPosts.concat(users[user].posts || []);
   }
-  // Отсортируем по дате
   allPosts.sort((a,b) => b.id - a.id);
   return allPosts;
 }
@@ -104,12 +103,10 @@ function getUserMessages() {
   return users[loggedInUser].messages || {};
 }
 
-// Экспорт базы
 function exportUsers() {
   return JSON.stringify(users, null, 2);
 }
 
-// Импорт базы
 function importUsers(jsonStr) {
   try {
     const importedUsers = JSON.parse(jsonStr);
@@ -121,7 +118,6 @@ function importUsers(jsonStr) {
   }
 }
 
-// Возвращаем список логинов для удобства
 function getAllUserLogins() {
   return Object.keys(users);
 }
