@@ -1,191 +1,167 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Мини Телеграмм</title>
-<style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    max-width: 600px;
-    margin: 30px auto;
-    background: #e6ecf0;
-    color: #222;
-    display: flex;
-    flex-direction: column;
-    height: 90vh;
-  }
-  h1 {
-    text-align: center;
-  }
-  #chat {
-    flex-grow: 1;
-    background: white;
-    border-radius: 8px;
-    padding: 10px;
-    overflow-y: auto;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    margin-bottom: 10px;
-  }
-  .message {
-    margin-bottom: 10px;
-    max-width: 70%;
-    padding: 8px 12px;
-    border-radius: 15px;
-    word-wrap: break-word;
-  }
-  .my-message {
-    background-color: #2979ff;
-    color: white;
-    align-self: flex-end;
-    border-bottom-right-radius: 0;
-  }
-  .other-message {
-    background-color: #ddd;
-    color: #222;
-    align-self: flex-start;
-    border-bottom-left-radius: 0;
-  }
-  #inputArea {
-    display: flex;
-    gap: 10px;
-  }
-  #messageInput {
-    flex-grow: 1;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 20px;
-    border: 1px solid #ccc;
-  }
-  button {
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 20px;
-    border: none;
-    background-color: #2979ff;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  button:hover {
-    background-color: #125edb;
-  }
-  #nicknameSection {
-    margin-bottom: 10px;
-    display: flex;
-    gap: 10px;
-  }
-  #nicknameInput {
-    flex-grow: 1;
-    padding: 8px;
-    font-size: 16px;
-    border-radius: 20px;
-    border: 1px solid #ccc;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Мини-Роблокс</title>
+  <style>
+    body { font-family: sans-serif; background: #111; color: #fff; margin: 0; padding: 20px; }
+    input, button, select { padding: 10px; margin: 5px; }
+    .hidden { display: none; }
+    .avatar { width: 50px; height: 50px; display: inline-block; margin: 5px; border-radius: 10px; }
+    .player { position: absolute; width: 40px; height: 40px; border-radius: 10px; }
+    canvas { background: #222; display: block; margin-top: 10px; }
+  </style>
 </head>
 <body>
 
-<h1>Мини Телеграмм</h1>
-
-<div id="nicknameSection">
-  <input type="text" id="nicknameInput" placeholder="Введите ник" />
-  <button id="setNickBtn">Установить ник</button>
+<div id="auth">
+  <h2>Вход</h2>
+  <input id="login" placeholder="Имя пользователя">
+  <input id="pass" placeholder="Пароль" type="password">
+  <button onclick="login()">Войти</button>
+  <button onclick="switchToReg()">Регистрация</button>
 </div>
 
-<div id="chat"></div>
+<div id="reg" class="hidden">
+  <h2>Регистрация</h2>
+  <input id="reg_login" placeholder="Имя пользователя">
+  <input id="reg_pass" placeholder="Пароль" type="password">
+  <button onclick="register()">Зарегистрироваться</button>
+  <button onclick="switchToAuth()">Назад</button>
+</div>
 
-<div id="inputArea">
-  <input type="text" id="messageInput" placeholder="Написать сообщение..." autocomplete="off" />
-  <button id="sendBtn">Отправить</button>
+<div id="game" class="hidden">
+  <h2>Привет, <span id="username"></span>!</h2>
+
+  <h3>Настрой аватар:</h3>
+  Цвет: <input type="color" id="colorPick">
+  <button onclick="saveAvatar()">Сохранить</button>
+
+  <div class="avatar" id="myAvatar" style="background: gray;"></div>
+
+  <h3>Игры:</h3>
+  <button onclick="startBomb()">Побег от бомб</button>
+  <button onclick="startPortal()">Портал</button>
+
+  <canvas id="gameCanvas" width="500" height="300" class="hidden"></canvas>
 </div>
 
 <script>
-  const chat = document.getElementById('chat');
-  const messageInput = document.getElementById('messageInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const nicknameInput = document.getElementById('nicknameInput');
-  const setNickBtn = document.getElementById('setNickBtn');
+let users = JSON.parse(localStorage.getItem("users") || "{}")
+let currentUser = null
+let channel = new BroadcastChannel("roblox_clone")
+let others = {}
 
-  // Локальное хранилище ключи
-  const STORAGE_NICK = 'miniTelegramNick';
-  const STORAGE_MESSAGES = 'miniTelegramMessages';
+function switchToReg() {
+  document.getElementById("auth").classList.add("hidden")
+  document.getElementById("reg").classList.remove("hidden")
+}
 
-  // Получаем ник или ставим дефолт
-  let nickname = localStorage.getItem(STORAGE_NICK) || 'Аноним';
+function switchToAuth() {
+  document.getElementById("reg").classList.add("hidden")
+  document.getElementById("auth").classList.remove("hidden")
+}
 
-  nicknameInput.value = nickname;
+function register() {
+  let login = document.getElementById("reg_login").value
+  let pass = document.getElementById("reg_pass").value
+  if (users[login]) return alert("Пользователь уже существует")
+  users[login] = { pass, avatar: "#888" }
+  localStorage.setItem("users", JSON.stringify(users))
+  alert("Успешно!")
+  switchToAuth()
+}
 
-  // Загружаем сообщения из localStorage или пустой массив
-  let messages = JSON.parse(localStorage.getItem(STORAGE_MESSAGES) || '[]');
+function login() {
+  let login = document.getElementById("login").value
+  let pass = document.getElementById("pass").value
+  if (!users[login] || users[login].pass !== pass) return alert("Неверные данные")
+  currentUser = login
+  document.getElementById("username").textContent = login
+  document.getElementById("auth").classList.add("hidden")
+  document.getElementById("game").classList.remove("hidden")
+  document.getElementById("colorPick").value = users[login].avatar
+  document.getElementById("myAvatar").style.background = users[login].avatar
+  broadcastAvatar()
+}
 
-  // Сохранить сообщения
-  function saveMessages() {
-    localStorage.setItem(STORAGE_MESSAGES, JSON.stringify(messages));
+function saveAvatar() {
+  let color = document.getElementById("colorPick").value
+  users[currentUser].avatar = color
+  localStorage.setItem("users", JSON.stringify(users))
+  document.getElementById("myAvatar").style.background = color
+  broadcastAvatar()
+}
+
+function broadcastAvatar() {
+  channel.postMessage({ user: currentUser, avatar: users[currentUser].avatar, pos: playerPos })
+}
+
+let playerPos = { x: 100, y: 100 }
+
+channel.onmessage = (e) => {
+  if (e.data.user !== currentUser) {
+    others[e.data.user] = e.data
   }
+}
 
-  // Добавить сообщение
-  function addMessage(text, nick) {
-    messages.push({
-      id: Date.now(),
-      text,
-      nick,
-    });
-    saveMessages();
-    renderMessages();
-    scrollChatToBottom();
+function drawOthers(ctx) {
+  for (let [name, data] of Object.entries(others)) {
+    ctx.fillStyle = data.avatar
+    ctx.fillRect(data.pos.x, data.pos.y, 40, 40)
+    ctx.fillStyle = "#fff"
+    ctx.fillText(name, data.pos.x, data.pos.y - 5)
   }
+}
 
-  // Отрисовать сообщения
-  function renderMessages() {
-    chat.innerHTML = '';
-    messages.forEach(m => {
-      const div = document.createElement('div');
-      div.classList.add('message');
-      div.textContent = `${m.nick}: ${m.text}`;
-      if (m.nick === nickname) {
-        div.classList.add('my-message');
-      } else {
-        div.classList.add('other-message');
+function startBomb() {
+  let canvas = document.getElementById("gameCanvas")
+  let ctx = canvas.getContext("2d")
+  canvas.classList.remove("hidden")
+  let bombs = []
+
+  setInterval(() => {
+    bombs.push({ x: Math.random() * 460, y: 0 })
+  }, 1000)
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") playerPos.x -= 10
+    if (e.key === "ArrowRight") playerPos.x += 10
+    if (e.key === "ArrowUp") playerPos.y -= 10
+    if (e.key === "ArrowDown") playerPos.y += 10
+    broadcastAvatar()
+  })
+
+  function loop() {
+    ctx.clearRect(0, 0, 500, 300)
+    ctx.fillStyle = users[currentUser].avatar
+    ctx.fillRect(playerPos.x, playerPos.y, 40, 40)
+
+    bombs.forEach(b => {
+      b.y += 2
+      ctx.fillStyle = "red"
+      ctx.fillRect(b.x, b.y, 10, 10)
+      if (
+        b.x < playerPos.x + 40 &&
+        b.x + 10 > playerPos.x &&
+        b.y < playerPos.y + 40 &&
+        b.y + 10 > playerPos.y
+      ) {
+        alert("Попал по тебе! 😵")
+        bombs.length = 0
       }
-      chat.appendChild(div);
-    });
+    })
+
+    drawOthers(ctx)
+    requestAnimationFrame(loop)
   }
 
-  // Скролл в самый низ
-  function scrollChatToBottom() {
-    chat.scrollTop = chat.scrollHeight;
-  }
+  loop()
+}
 
-  // Отправка сообщения по кнопке
-  sendBtn.onclick = () => {
-    const text = messageInput.value.trim();
-    if (!text) return alert('Напиши сообщение!');
-    addMessage(text, nickname);
-    messageInput.value = '';
-    messageInput.focus();
-  };
-
-  // Отправка сообщения по Enter
-  messageInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendBtn.click();
-    }
-  });
-
-  // Установка ника
-  setNickBtn.onclick = () => {
-    const newNick = nicknameInput.value.trim();
-    if (!newNick) return alert('Ник не может быть пустым!');
-    nickname = newNick;
-    localStorage.setItem(STORAGE_NICK, nickname);
-    renderMessages();
-  };
-
-  // Изначальная отрисовка
-  renderMessages();
-  scrollChatToBottom();
+function startPortal() {
+  alert("Пока портал не готов 😅, скоро добавлю!")
+}
 </script>
 
 </body>
